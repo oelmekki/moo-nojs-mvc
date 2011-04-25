@@ -135,11 +135,11 @@ Here is the same using my controller lib :
         View: this.MyView,
         User: this.User,
         events: [ 
-          { element: 'showTrigger', type: 'click', view_method: 'show' },
-          { element: 'hideTrigger', type: 'click', view_method: 'hide' },
-          { element: 'userList', delegate: 'deleteLink', controller_method: 'deleteLinkClicked', type: 'click' },
-          { element: 'userList', delegate: 'hideLink', controller_method: 'hideLinkClicked', type: 'click' },
-          { element: 'search', type: 'keyup', cancel_delay: 1000 }
+          { el: 'showTrigger', type: 'click', view_method: 'show' },
+          { el: 'hideTrigger', type: 'click', view_method: 'hide' },
+          { el: 'userList', delegate: 'deleteLink', controller_method: 'deleteLinkClicked', type: 'click' },
+          { el: 'userList', delegate: 'hideLink', controller_method: 'hideLinkClicked', type: 'click' },
+          { el: 'search', type: 'keyup', cancel_delay: 1000 }
         ]
       },
 
@@ -174,7 +174,7 @@ The first two events simply call view methods (show and hide). The event object 
 automatically stopped. If that something you doesn't want, add your events manually
 in the .run() method, but most of the time, we want to stop them.
 
-The element key of the event option is the name of the view getter (see the view section
+The el key of the event option is the name of the view getter (see the view section
 for more on that).
 
 Here is the stack that determine what method to call :
@@ -183,7 +183,7 @@ Here is the stack that determine what method to call :
 * if a method named after the element and type option exist, use it (ex: link + click = linkClicked)
 * if view_method is set, call it directly (in fact, a wrapper is created that stop event, then call the view method)
 
-Third and fourth events are about delegation. Simply give the wrapper element as element,
+Third and fourth events are about delegation. Simply give the wrapper element as el,
 and what you want to delegate to has delegate. The lib will do the delegation, and
 ensure to set the target as needed if the target has what we want as parent (if we clicked
 the image in a link, we clicked the link, right? No need to wait for or rely on
