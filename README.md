@@ -359,3 +359,87 @@ You are recommanded to use an option selector, even if you want a getter method.
 not know if it would become a simpler selector or not in the future, and your controller
 should not have to be aware if the selector is a simple one or a method. view.get('search')
 will always work wether you just want to get '#search' or have complex logic behind.
+
+
+### Model
+
+Model is probably the most difficult part, because it heavyly rely on the server side
+app design. Still, there are things we repeat again and again here too, putting args
+in a hash to user toQueryString, sending request and firing callabacks upon completion.
+
+As others, I choosed to start from a rails api kind, using resources, but I put a lot of
+overidable methods so you may custom your model (or a Framwork.Model subclass aiming to
+be model parent) to your need.
+
+Here is the simplest model example :
+
+    (function(){
+    this.User = new Class({ 
+      Extends: Framework.Model,
+
+      options: {
+        base_url: '/users/'
+      }
+    });
+    }).apply( typeof exports == 'undefined' ? this : global );
+
+It means that you have a classic user rails resource. You can now do :
+
+    var user;
+    user = new User({ first_name: 'test', last_name: 'user', bio: "I'm a test user" });
+    user.save( function( user ){ console.log( 'saved!' ); }); // save the user and alert about it
+    console.log( user.get( 'first_name' ) ); // => test
+
+    user.set( 'first_name', 'for_real' );
+    user.save( function( user ){ console.log( user.get( 'first_name' ) ); }); // => for_real
+
+    // once save
+    user = User.find( 1, function( user ){ console.log( user.get( 'id' ) ); }); // => 1
+
+    user.update_attribute( 'first_name', 'test' ); // save straight, without callback
+    user.update_attributes({ 'last_name': 'admin', 'bio': "I'm an overlord" }); // save straight, without callback
+
+    user.destroy( function( user ){ console.log( 'deleted' ); }); // delete the user
+
+    User.find_all({ first_name: 'test' }, function( users ){ console.log( users ); }); // get all users whose first name is "test"
+    User.create({ first_name: 'test', last_name: 'user2', bio: "I'm an other test user" }, function( user ){ console.log( user ); });
+
+
+Ok, but what if you do not work with a resource-like restful api? No problem, the Model class
+provide a deep level of overidability. First, you can custom every request path and http verb.
+The recognize requests are : find, find_all, create, update and destroy. But you do not have
+to use all if you do not need to. For example, if you want to commit to a singleton resource
+that take params and return values, without any id consideration, you may use only find and
+create (create is used as soon as there is no id when saving, else update is used).
+
+Example: 
+
+    (function(){
+    this.User = new Class({ 
+      Extends: Framework.Model,
+
+      options: {
+        base_url: '/users/',
+        find: {
+          path: 'preference.json',
+          method: 'post'
+        },
+
+        create: {
+          path: 'save_preference.json',
+          method: 'post'
+        }
+      }
+    });
+    }).apply( typeof exports == 'undefined' ? this : global );
+
+
+Each request also as its own variant of :
+
+* compute_<request>_url => method that return the url on which to send the request
+* compute_<request>_params => method use to compute request parameters
+* build_from_<request> => method that instantiate model from a find / find_all / create request
+* <request>ed => called when request is completed (call the passed callback, by default)
+* before_<request> => called before sending the request
+* after_<request> => called after sending the request
+
