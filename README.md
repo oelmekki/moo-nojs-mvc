@@ -6,14 +6,18 @@ Why?
 ----
 
 For some times now, I use mvc pattern in my javascript code. I think of my apps as a set
-of modules, each one having its micro-mvc implemented. Models handle requests and data
+of modules, each one having its own mvc pattern implemented. Models handle requests and data
 computation, views handle dom manipulation and controllers handle events and model/view
 leverage.
 
-I found several libs that provide strong mvc support for mootools. Still, their view
+I found [several](https://github.com/seanmonstar/monstars.js) 
+[libs](https://github.com/fate/Mootools-MVC)
+[that](https://github.com/kassens/mootools-mvc) 
+[provide](https://github.com/subtleGradient/mootools-mvc-controller) 
+[strong](http://trac.puremvc.org/PureMVC_JS) mvc support for mootools. Still, their view
 part was mostly a templating system that build DOM from javascript.
 
-While I have no problem with creating elements from mootools, that's definely not the main
+While I have no problem with creating elements from mootools, that's definitely not the main
 purpose I want for my views. I strongly believe in nojs support (well, i would call that
 non-obstrusive support, but this term is more and more used to simply refer the fact there
 is no javascript in .html), which mean that features are in server side code, not in
