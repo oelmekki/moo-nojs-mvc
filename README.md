@@ -199,3 +199,163 @@ That's about all for controller. Just one more thing : you can specify a before_
 list in the options (it should be an array of controller method names). Those methods
 will be called at initialization. If one return false (===), the events won't be bound
 and the .run() method from the view won't be called.
+
+
+### View
+
+As said before, the main purpose of a view is to avoid writing fifty getters methods
+just to return a .getElement().
+
+Here is what it looks without moo-nojs-mvc :
+
+    (function(){
+    this.MyView = new Class({ 
+      Implements: [ Options ],
+
+      options: {
+        Fx: Fx.Morph
+      },
+
+      initialize: function( $element, options ){
+        this.setOptions( options );
+        this.$element = $element;
+        this.list_fx = new this.options.FX( this.getUserList(), { link: 'cancel' });
+      },
+
+      getUserList: function(){
+        return this.$user_block || ( this.$userBlock = this.$element.getElement( '#users' ) );
+      },
+
+      getUsers: function(){
+        return this.getUserList().getElements( '.user' );
+      },
+
+      getActionBlock: function(){
+        return this.$actionBlock || ( this.$actionBlock = this.$element.getElement( '.actions' ) );
+      },
+
+      getSearch: function(){
+        return this.$search || ( this.$search = this.getActionBlock().getElement( 'input[type="search"]' ) );
+      },
+
+      getStatusFilters: function(){
+        return this.$status_filters || ( this.$status_filters = this.getActionBlock().getElements( 'a.status' ) );
+      },
+
+      getLetterFilter: function(){
+        return this.getActionBlock().getElement( '.letters' );
+      },
+
+      getPagination: function(){
+        return this.$element.getElement( '.pagination' );
+      },
+
+      regenerateUserList: function( users ){
+        this.getUserList().empty().setStyles({ height: 0, opacity: 0 });
+
+        users.each( function( user ){
+          this.addUser( user );
+        }.bind( this ));
+
+        this.list_fx.start({ height: 750, opacity: 1 });
+      },
+
+      addUser: function( user ){
+        var $user;
+
+        $user = new Element( 'div.user' ).set( 'data-id', user.get( 'id' ) ).inject( this.getUserList() );
+        ( new Element( 'h3.name' ) ).set( 'text', user.get( 'name' ) ).inject( $user );
+        ( new Element( 'a.delete[data-method="delete"][text="delete"]' ) ).inject( $user );
+      }
+    });
+    }).apply( typeof exports == 'undefined' ? this : global );
+
+
+The point is, the controller should not use any css selector by itself. So, for whatever he may
+need, wether it want to bind an event or to retrieve a data-* attribute, it has to request a
+getter from the view.
+
+This can quickly lead to very long and very boring to read file. In the previous example, what
+really matters is the regenerateUserList() et addUser() methods. All but those methods are
+garbage. So now, either we put css in controller to avoid verbose code, and we chase any
+selector each time we modify the html code, or we find a better way to handle getters.
+
+I choosed the second solution. Here is what it looks like with moo-nojs-mvc :
+
+
+    (function(){
+    this.MyView = new Class({ 
+      Extends: Framework.View,
+      Implements: [ Options ],
+
+      options: {
+        Fx: Fx.Morph,
+        selectors: {
+          userList: '#users',
+          users: { sel: '.user', within: 'userList', cache: false, multiple: true },
+          actionBlock: '.actions',
+          search: { sel: 'input[type="search"]', within: 'actionBlock' },
+          statusFilters: { sel: 'a.status', within: 'actionBlock', multiple: true },
+          letterFilter: { sel: '.letters', within: 'actionBlock' },
+          pagination: { sel: '.pagination', cache: false }
+        }
+      },
+
+      run: function(){
+        this.list_fx = new this.options.FX( this.get( 'userList' ), { link: 'cancel' });
+      },
+
+      regenerateUserList: function( users ){
+        this.get( 'userList' ).empty().setStyles({ height: 0, opacity: 0 });
+
+        users.each( function( user ){
+          this.addUser( user );
+        }.bind( this ));
+
+        this.list_fx.start({ height: 750, opacity: 1 });
+      },
+
+      addUser: function( user ){
+        var $user;
+
+        $user = new Element( 'div.user' ).set( 'data-id', user.get( 'id' ) ).inject( this.get( 'userList' ) );
+        ( new Element( 'h3.name' ) ).set( 'text', user.get( 'name' ) ).inject( $user );
+        ( new Element( 'a.delete[data-method="delete"][text="delete"]' ) ).inject( $user );
+      }
+    });
+    }).apply( typeof exports == 'undefined' ? this : global );
+
+
+Ok now, we have a central point to manage selectors, within the "selectors" view option.
+Each one can be get with the view .get() method. view.get( 'userList' ) will request for
+the #users element.
+
+The simplest form, as the first selector, will get the element once and cache it. If the
+selector is more complex, it needs to be an object rather than a string. In this case,
+the 'sel' key hold the actual selector.
+
+If you don't want to cache the result, set cache: false.
+
+If you want to use getElements rather than getElement, set multiple: true
+
+If you want to search within an other selector rather than this.$element, use within and
+give the name of that other selector.
+
+When a result is cached, it is refered as this.$<selector name>, so the search selector
+become this.$search. This also means that, if you want to, you can view.get( 'element' ),
+or manually set any '$' prefixed instance variable and then get() it.
+
+You may also want to use true getter methods. No problem, create a method named after
+the selector name, so 'search' ask for 'getSearch'. Don't forget that this method return
+will still be cached (and used next time) if you do not set cache: false.
+
+Here is the stack of the resolution of a selector :
+
+* use the cached element if any and cache is set to true (default)
+* use the method named after the selector name
+* use the sel key ( or the value of the selector if it's a string )
+
+You are recommanded to use an option selector, even if you want a getter method. You may
+not know if it would become a simpler selector or not in the future, and your controller
+should not have to be aware if the selector is a simple one or a method. view.get('search')
+will always work wether you just want to get '#search' or have complex logic behind.
