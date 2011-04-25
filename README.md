@@ -48,114 +48,114 @@ Here too, I found myself doing again and again the same things :
 
 It usually gives something like that :
 
-  (function(){
-  this.MyController = new Class({ 
-    Implements: [ Options ],
+    (function(){
+    this.MyController = new Class({ 
+      Implements: [ Options ],
 
-    options: {
-      View: this.MyView,
-      User: this.User
-    },
+      options: {
+        View: this.MyView,
+        User: this.User
+      },
 
-    initialize: function( $element, options ){
-      this.setOptions( options );
-      this.$element = $element;
-      this.view = new this.options.View( $element );
-    },
+      initialize: function( $element, options ){
+        this.setOptions( options );
+        this.$element = $element;
+        this.view = new this.options.View( $element );
+      },
 
-    run: function(){
-      this.bindEvents();
-    },
+      run: function(){
+        this.bindEvents();
+      },
 
-    bindEvents: function(){
-      this.view.getShowTrigger().addEvent( 'click', this.showClicked.bind( this ) );
-      this.view.getHideTrigger().addEvent( 'click', this.hideClicked.bind( this ) );
-      this.view.getUserList().addEvent( 'click', this.userListClicked.bind( this ) );
-      this.view.getSearch().addEvent( 'keyup', this.searchKeyuped.bind( this ) );
-    },
+      bindEvents: function(){
+        this.view.getShowTrigger().addEvent( 'click', this.showClicked.bind( this ) );
+        this.view.getHideTrigger().addEvent( 'click', this.hideClicked.bind( this ) );
+        this.view.getUserList().addEvent( 'click', this.userListClicked.bind( this ) );
+        this.view.getSearch().addEvent( 'keyup', this.searchKeyuped.bind( this ) );
+      },
 
-    showClicked: function( event ){
-      event.stop();
-      this.view.show();
-    },
-
-    hideClicked: function( event ){
-      event.stop();
-      this.view.hide();
-    },
-
-    userListClicked: function( event ){
-      var $target, user;
-
-      $target = $( event.target );
-
-      // let not fail if html dev decided there should be a span or an img in the link
-      if ( $target.getParent( 'a' ) ){
-        $target = $target.getParent( 'a' );
-      }
-
-      if ( $target.match( '.delete' ) ){
+      showClicked: function( event ){
         event.stop();
-        user = new this.options.User( $target.get( 'data-id' ) );
-        user.destroy( this.view.hideUser.bind( this.view ) );
-      }
+        this.view.show();
+      },
 
-      if ( $target.match( '.hide' ) ){
+      hideClicked: function( event ){
         event.stop();
-        user = new this.options.User( $target.get( 'data-id' ) );
-        this.view.hideUser( user );
+        this.view.hide();
+      },
+
+      userListClicked: function( event ){
+        var $target, user;
+
+        $target = $( event.target );
+
+        // let not fail if html dev decided there should be a span or an img in the link
+        if ( $target.getParent( 'a' ) ){
+          $target = $target.getParent( 'a' );
+        }
+
+        if ( $target.match( '.delete' ) ){
+          event.stop();
+          user = new this.options.User( $target.get( 'data-id' ) );
+          user.destroy( this.view.hideUser.bind( this.view ) );
+        }
+
+        if ( $target.match( '.hide' ) ){
+          event.stop();
+          user = new this.options.User( $target.get( 'data-id' ) );
+          this.view.hideUser( user );
+        }
+      },
+
+      searchKeyuped: function(){
+        window.clearTimeout( this.search_timeout );
+
+        window.setTimeout( function(){
+          this.options.User.find_all( this.view.getSearch().get( 'value' ), this.view.filterUsers.bind( this.view ) );
+        }.bind( this ), 1000 );
       }
-    },
-
-    searchKeyuped: function(){
-      window.clearTimeout( this.search_timeout );
-
-      window.setTimeout( function(){
-        this.options.User.find_all( this.view.getSearch().get( 'value' ), this.view.filterUsers.bind( this.view ) );
-      }.bind( this ), 1000 );
-    }
-  });
-  }).apply( typeof exports != 'undefined' ? global : this );
+    });
+    }).apply( typeof exports != 'undefined' ? global : this );
 
 
 Geez, we really need near than 70 LOC for that?
 
 Here is the same using my controller lib :
 
-  (function(){
-  this.MyController = new Class({ 
-    Extends: Framework.Controller,
-    Implements: [ Options ],
+    (function(){
+    this.MyController = new Class({ 
+      Extends: Framework.Controller,
+      Implements: [ Options ],
 
-    options: {
-      View: this.MyView,
-      User: this.User,
-      events: [ 
-        { element: 'showTrigger', type: 'click', view_method: 'show' },
-        { element: 'hideTrigger', type: 'click', view_method: 'hide' },
-        { element: 'userList', delegate: 'deleteLink', controller_method: 'deleteLinkClicked', type: 'click' },
-        { element: 'userList', delegate: 'hideLink', controller_method: 'hideLinkClicked', type: 'click' },
-        { element: 'search', type: 'keyup', cancel_delay: 1000 }
-      ]
-    },
+      options: {
+        View: this.MyView,
+        User: this.User,
+        events: [ 
+          { element: 'showTrigger', type: 'click', view_method: 'show' },
+          { element: 'hideTrigger', type: 'click', view_method: 'hide' },
+          { element: 'userList', delegate: 'deleteLink', controller_method: 'deleteLinkClicked', type: 'click' },
+          { element: 'userList', delegate: 'hideLink', controller_method: 'hideLinkClicked', type: 'click' },
+          { element: 'search', type: 'keyup', cancel_delay: 1000 }
+        ]
+      },
 
-    deleteLinkClicked: function( $target, event ){
-      var user;
-      user = new this.options.User( $target.get( 'data-id' ) );
-      user.destroy( this.view.hideUser.bind( this.view ) );
-    },
+      deleteLinkClicked: function( $target, event ){
+        var user;
+        user = new this.options.User( $target.get( 'data-id' ) );
+        user.destroy( this.view.hideUser.bind( this.view ) );
+      },
 
-    hideLinkClicked: function( $target, event ){
-      var user;
-      user = new this.options.User( $target.get( 'data-id' ) );
-      this.view.hideUser( user );
-    }
+      hideLinkClicked: function( $target, event ){
+        var user;
+        user = new this.options.User( $target.get( 'data-id' ) );
+        this.view.hideUser( user );
+      }
 
-    searchKeyuped: function(){
-      this.options.User.find_all( this.view.get( 'search' ).get( 'value' ), this.view.filterUsers.bind( this.view ) );
-    }
-  });
-  }).apply( typeof exports != 'undefined' ? global : this );
+      searchKeyuped: function(){
+        this.options.User.find_all( this.view.get( 'search' ).get( 'value' ), this.view.filterUsers.bind( this.view ) );
+      }
+    });
+    }).apply( typeof exports != 'undefined' ? global : this );
 
 
 Way better! We cut code by half, and there is only 5 events, here. The more you have,
