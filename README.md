@@ -436,10 +436,10 @@ Example:
 
 Each request also as its own variant of :
 
-* compute_*request*_url => method that return the url on which to send the request
-* compute_*request*_params => method use to compute request parameters
-* build_from_*request* => method that instantiate model from a find / find_all / create request
-* *request*ed => called when request is completed (call the passed callback, by default)
-* before_*request* => called before sending the request
-* after_*request* => called after sending the request
+    - compute_<request>_url => method that return the url on which to send the request
+    - compute_<request>_params => method use to compute request parameters
+    - build_from_<request> => method that instantiate model from a find / find_all / create request
+    - <request>ed => called when request is completed (call the passed callback, by default)
+    - before_<request> => called before sending the request
+    - after_<request> => called after sending the request
 
