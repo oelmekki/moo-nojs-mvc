@@ -45,7 +45,9 @@ this.Model = new Class({
     destroy: {
       path: '',
       method: 'delete'
-    }
+    },
+
+    dependencies: {}
   },
 
   ClassMethods: {
@@ -223,7 +225,15 @@ this.Model = new Class({
   },
 
 
-  initialize: function( attributes ){
+  initialize: function( attributes, options ){
+    this.setOptions( options );
+
+    for ( key in this.options.dependencies ){
+       if ( this.options.dependencies.hasOwnProperty( key ) ){
+          this.options[ key ] = this.options.dependencies[ key ];
+       }
+    }
+
     this.before_initialize();
     this._attributes = new Hash( attributes );
     this.is_new_record = ( this.get( 'id' ) ? false : true );

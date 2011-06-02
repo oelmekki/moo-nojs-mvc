@@ -18,13 +18,25 @@ this.View = new Class({
   Implements: [ Options ],
 
   options: {
-    selectors: {}
+    selectors: {},
+    dependencies: {}
   },
 
 
   initialize: function( $element, options ){
     this.setOptions( options );
+
+    for ( key in this.options.dependencies ){
+       if ( this.options.dependencies.hasOwnProperty( key ) ){
+          this.options[ key ] = this.options.dependencies[ key ];
+       }
+    }
+
     this.$element = $element;
+
+    if ( this.options.async_run && ! this.fireEvent ){
+      Object.append( this, Events.prototype );
+    }
   },
 
 
