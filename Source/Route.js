@@ -1,7 +1,13 @@
 Framework.Route = new Class({ 
   initialize: function( config, name ){
     if ( typeof config == 'string' ){
-      this.url = config;
+      if ( config.match( /:\w+/ ) ){
+        this.config = { scheme: config };
+      }
+
+      else {
+        this.url = config;
+      }
     }
 
     else {
@@ -9,6 +15,11 @@ Framework.Route = new Class({
 
       if ( this.config.append_to && typeOf( this.config.append_to ) == 'string' ){
         this.config.append_to = [ this.config.append_to ];
+      }
+
+      if ( config.is_default ){
+        this.is_default = true;
+        this.default_params = new Hash( ( typeof config.is_default === true ? {} : config.is_default ) );
       }
     }
 
@@ -35,7 +46,12 @@ Framework.Route = new Class({
 
       return url + this.config.scheme.replace( /:\w+/g, function( match ){
         match = match.replace( ':', '' );
-        if ( this.config[ match ] ){
+
+        if ( ! this.config[ match ] ){
+          this.config[ match ] = /.*/;
+        }
+
+        if ( params[ match ] ){
           if ( params[ match ].match( this.config[ match ] ) ){
             return params[ match ];
           }
@@ -72,7 +88,7 @@ Framework.Route = new Class({
           pattern = '.*?';
         }
 
-        return '/(' + pattern + ')(?:' + ( submatching ? '/' : '\\?' ) + '|$)';
+        return '(' + pattern + ')(?:' + ( submatching ? '/' : '\\?' ) + '|$)';
       }.bind( this ));
 
       regex = new RegExp( regex );

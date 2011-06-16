@@ -89,6 +89,11 @@ Framework.RouterModule = new Class({
       }
     });
 
+    if ( ! match_found ){
+      match_found = this.getDefaultRoute();
+      params = match_found.default_params;
+    }
+
     if ( match_found ){
       if ( callback ){
         callback( params, match_found );
@@ -132,5 +137,18 @@ Framework.RouterModule = new Class({
 
 
     this[ 'action' + route_name.capitalize() ]( params, Framework.Route.routes.get( route_name ) );
+  },
+
+
+  getDefaultRoute: function(){
+    var default_route;
+
+    Framework.Route.routes.each( function( route, name ){
+      if ( route.is_default ){
+        default_route = route;
+      }
+    });
+
+    return default_route;
   }
 });
