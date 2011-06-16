@@ -76,6 +76,10 @@ this.View = new Class({
       selector = selector.sel;
     }
 
+    if ( ! this.get( within ) ){
+      throw new Error( 'Selector "' + key + '" is supposed to be in "' + within + '" context. Would be better if that context element could be found.' );
+    }
+
     $el = this.get( within )[ multiple ? 'getElements' : 'getElement' ]( selector );
 
     if ( cache ){
