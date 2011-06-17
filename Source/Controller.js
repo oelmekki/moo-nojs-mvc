@@ -19,7 +19,7 @@ this.Controller = new Class({
 
   options: {
     View: this.View,
-    events: [],
+    events: {},
     before_filters: [],
     dependencies: {}
   },
@@ -94,7 +94,7 @@ this.Controller = new Class({
 
 
   bindEvents: function(){
-    this.options.events.each( function( e ){
+    ( new Hash( this.options.events )).each( function( e ){
       this.bindEvent( e );
     }.bind( this ));
   },

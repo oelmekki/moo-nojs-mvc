@@ -134,13 +134,13 @@ Here is the same using my controller lib :
       options: {
         View: this.MyView,
         User: this.User,
-        events: [ 
-          { el: 'showTrigger', type: 'click', view_method: 'show' },
-          { el: 'hideTrigger', type: 'click', view_method: 'hide' },
-          { el: 'userList', delegate: 'deleteLink', controller_method: 'deleteLinkClicked', type: 'click' },
-          { el: 'userList', delegate: 'hideLink', controller_method: 'hideLinkClicked', type: 'click' },
-          { el: 'search', type: 'keyup', cancel_delay: 1000 }
-        ]
+        events: { 
+          show_content: { el: 'showTrigger', type: 'click', view_method: 'show' },
+          hide_content: { el: 'hideTrigger', type: 'click', view_method: 'hide' },
+          delete_user: { el: 'userList', delegate: 'deleteLink', controller_method: 'deleteLinkClicked', type: 'click' },
+          hide_user: { el: 'userList', delegate: 'hideLink', controller_method: 'hideLinkClicked', type: 'click' },
+          search_users: { el: 'search', type: 'keyup', cancel_delay: 1000 }
+        }
       },
 
       deleteLinkClicked: function( $target, event ){
