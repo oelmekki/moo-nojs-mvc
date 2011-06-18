@@ -114,6 +114,10 @@ this.Controller = new Class({
 
         sel = view.options.selectors[ e.delegate ];
 
+        if ( ! sel ){
+          throw new Error( 'You asked controller to delegate "' + e.el + '" ' + e.type + ' events on "' + e.delegate + '" elements. What about having some "' + e.delegate + '" definition in your view?' );
+        }
+
         if ( typeof sel != 'string' ){
           sel = sel.sel;
         }
@@ -139,6 +143,25 @@ this.Controller = new Class({
         }
 
         var $target = $( event.target );
+
+        if ( e.ensure_element !== false ){
+          var sel;
+
+          sel = view.options.selectors[ e.el ];
+
+          if ( ! sel ){
+            throw new Error( 'You asked controller to ensure element on "' + e.el + '" ' + e.type + ' events, but it\'s appear there is no "' + e.el + '" selector. ensure_element (set as default) do not work for now with dynamic getters. Please either set "ensure_element: false" in your event definition, or use a static event in your view.' );
+          }
+
+          if ( typeof sel != 'string' ){
+            sel = sel.sel;
+          }
+
+          if ( $target.getParent( sel ) ){
+            $target = $target.getParent( sel );
+          }
+        }
+
         callback( $target, event );
       };
     }
