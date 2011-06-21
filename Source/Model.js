@@ -297,7 +297,7 @@ this.Model = new Class({
     }.bind( this ));
 
     attributes = this.compute_create_params( this._attributes );
-    request.send( this.options.create.method == 'get' ? attributes.toQueryString() : attributes );
+    request.send( attributes.toQueryString() );
   },
 
 
