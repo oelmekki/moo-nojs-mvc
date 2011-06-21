@@ -36,7 +36,13 @@ Framework.RouterModule = new Class({
       this.parseRoute();
     }
 
-    if ( ! this.options.nopushstate_routing ){
+    if ( this.options.nopushstate_routing ){
+      window.addEvent( 'hashchange', function(){
+        this.parseRoute();
+      }.bind( this ));
+    }
+
+    else {
       var params;
 
       window.onpopstate = function( event ){
@@ -69,7 +75,7 @@ Framework.RouterModule = new Class({
           redirect = true;
         }
       }
-    });
+    }.bind( this ));
 
     return redirect;
   },
