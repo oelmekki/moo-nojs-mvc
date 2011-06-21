@@ -17,7 +17,7 @@ provides: [Framework.Model]
 ...
 */
 this.Model = new Class({
-  Implements: [ Options ],
+  Implements: [ Events, Options ],
 
   options: {
     Request: Request.JSON,
@@ -53,14 +53,15 @@ this.Model = new Class({
   ClassMethods: {
     _cache: new Hash(),
 
-    find: function( params, callback ){
+    find: function( params, callback_success, callback_failure ){
       var instance, request;
 
-      callback = callback || this.default_callback.bind( this );
+      callback_success = callback_success || this.default_callback_success.bind( this );
+      callback_failure = callback_failure || this.default_callback_failure.bind( this );
 
       if ( typeOf( params ) == 'number' ){
         if ( this._cache.get( params ) ){
-          this.found( callback, this._cache.get( params ), params );
+          this.found( callback_success, this._cache.get( params ), params );
         }
       }
 
@@ -81,8 +82,10 @@ this.Model = new Class({
             this._cache.set( instance.get( 'id' ), instance );
           }
 
-          this.found( callback, instance, params );
+          this.found( callback_success, instance, params );
         }.bind( this ));
+
+        request.addEvent( 'failure', callback_failure );
 
         params = this.compute_find_params( params );
         request.send( this.prototype.options.find.method == 'get' ? params.toQueryString() : params );
@@ -90,10 +93,11 @@ this.Model = new Class({
     },
 
 
-    find_all: function( params, callback ){
+    find_all: function( params, callback_success, callback_failure ){
       var instances, instance, request;
 
-      callback = callback || this.default_callback.bind( this );
+      callback_success = callback_success || this.default_callback_success.bind( this );
+      callback_failure = callback_failure || this.default_callback_failure.bind( this );
       params = new Hash( params );
 
       request = new this.prototype.options.Request({
@@ -103,15 +107,17 @@ this.Model = new Class({
 
       request.addEvent( 'success', function( resp ){
         instances = this.build_from_find_all( resp );
-        this.found_all( callback, instances, params );
+        this.found_all( callback_success, instances, params );
       }.bind( this ));
+
+      request.addEvent( 'failure', callback_failure );
 
       params = this.compute_find_all_params( params );
       request.send( this.prototype.options.find_all.method == 'get' ? params.toQueryString() : params );
     },
 
 
-    create: function( attributes, callback ){
+    create: function( attributes, callback_success, callback_failure ){
       var instance, request;
 
       instance = this.build_from_create( resp );
@@ -119,7 +125,8 @@ this.Model = new Class({
       instance.is_new_record = false;
       instance.before_create();
 
-      callback = callback || this.default_callback.bind( this );
+      callback_success = callback_success || this.default_callback_success.bind( this );
+      callback_failure = callback_failure || this.default_callback_failure.bind( this );
       attributes = new Hash( attributes );
 
       request = new this.prototype.options.Request({
@@ -134,9 +141,11 @@ this.Model = new Class({
           this._cache.set( instance.get( 'id' ), instance );
         }
 
-        this.created( callback, instance, attributes );
+        this.created( callback_success, instance, attributes );
         instance.after_create();
       }.bind( this ));
+
+      request.addEvent( 'failure', callback_failure );
 
       attributes = this.compute_create_params( attributes );
       request.send( this.prototype.options.create.method == 'get' ? attributes.toQueryString() : attributes );
@@ -212,7 +221,11 @@ this.Model = new Class({
     },
 
 
-    default_callback: function(){
+    default_callback_success: function(){
+    },
+
+
+    default_callback_failure: function(){
     }
   },
 
@@ -273,16 +286,16 @@ this.Model = new Class({
   },
 
 
-  save: function( callback ){
-    ( this.is_new_record ? this._create( callback ) : this._update( callback ) );
+  save: function( callback_success, callback_failure ){
+    ( this.is_new_record ? this._create( callback_success, callback_failure ) : this._update( callback_success, callback_failure ) );
   },
 
 
-  _create: function( callback ){
+  _create: function( callback_success, callback_failure ){
     var request, attributes;
 
     this.before_create();
-    callback = callback || this.default_callback.bind( this );
+    callback_success = callback_success || this.default_callback_success.bind( this );
 
     request = new this.options.Request({
       url: this.compute_create_url( this._attributes ),
@@ -292,20 +305,22 @@ this.Model = new Class({
     request.addEvent( 'success', function( resp ){
       this.response_cache.create = resp;
       this.is_new_record = false;
-      this.created( callback );
+      this.created( callback_success );
       this.after_create();
     }.bind( this ));
+
+    request.addEvent( 'failure', callback_failure );
 
     attributes = this.compute_create_params( this._attributes );
     request.send( attributes.toQueryString() );
   },
 
 
-  _update: function( callback ){
+  _update: function( callback_success, callback_failure ){
     var request, attributes;
 
     this.before_update();
-    callback = callback || this.default_callback.bind( this );
+    callback_success = callback_success || this.default_callback_success.bind( this );
 
     request = new this.options.Request({
       url: this.compute_update_url( this._attributes ),
@@ -314,9 +329,11 @@ this.Model = new Class({
 
     request.addEvent( 'success', function( resp ){
       this.response_cache.update = resp;
-      this.updated( callback );
+      this.updated( callback_success );
       this.after_update();
     }.bind( this ));
+
+    request.addEvent( 'failure', callback_failure );
 
     attributes = this.compute_update_params( this._attributes );
     request.send( this.options.update.method == 'get' ? attributes.toQueryString() : attributes );
@@ -333,12 +350,12 @@ this.Model = new Class({
   },
 
 
-  destroy: function( callback ){
+  destroy: function( callback_success, callback_failure ){
     var request, attributes;
 
     this.before_destroy();
 
-    callback = callback || this.default_callback.bind( this );
+    callback_success = callback_failure || this.default_callback_success.bind( this );
 
     if ( ! this.is_new_record ){
       request = new this.options.Request({
@@ -348,9 +365,11 @@ this.Model = new Class({
 
       request.addEvent( 'success', function( resp ){
         this.response_cache.destroy = resp;
-        this.destroyed( callback );
+        this.destroyed( callback_success );
         this.after_destroy();
       }.bind( this ));
+
+      request.addEvent( 'failure', callback_failure );
 
       attributes = this.compute_destroy_params( this._attributes );
       request.send( this.options.destroy.method == 'get' ? attributes.toQueryString() : attributes );
@@ -379,7 +398,13 @@ this.Model = new Class({
   },
 
 
-  default_callback: function(){
+  default_callback_success: function(){
+    this.fireEvent( 'success', this );
+  },
+
+
+  default_callback_failure: function(){
+    this.fireEvent( 'failure', this );
   },
 
 
