@@ -72,8 +72,21 @@ this.View = new Class({
         within = selector.within;
       }
 
-      multiple = selector.multiple;
+      if ( typeof( selector.multiple ) != 'undefined' ){
+        multiple = selector.multiple;
+      }
+      
+      else {
+        multiple = !! key.match( /s$/ );
+      }
+
       selector = selector.sel;
+    }
+
+    else {
+      if ( key.match( /s$/ ) ){
+        multiple = true;
+      }
     }
 
     if ( ! this.get( within ) ){
