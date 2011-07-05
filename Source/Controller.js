@@ -103,12 +103,15 @@ this.Controller = new Class({
   bindEvent: function( e ){
     var callback_name, wrapper_func, view;
 
+    if ( ! this.view.get( e.el ) ){
+      throw new Error( 'Controller : selector "' + e.el + '" do not return any element.' );
+    }
+
     callback_name = this._getCallbackName( e );
     view = this.view;
 
     if ( e.delegate ){
       wrapper_func = function( event, callback ){
-        event.stop();
 
         var sel, $target = $( event.target );
 
