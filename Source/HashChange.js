@@ -111,7 +111,10 @@ var HashChangeWrapper = this.HashChangeWrapper = new Class({
 Element.Events.hashchange = {
   onAdd: function(){
     if ( ! window.hashWrapper ){
-      window.hashWrapper = new HashChangeWrapper();
+      var options;
+
+      options = window.hashchange_iframe_page ? { iframe_page: window.hashchange_iframe_page } : {};
+      window.hashWrapper = new HashChangeWrapper( options );
     }
   }
 };
