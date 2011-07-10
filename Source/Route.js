@@ -88,10 +88,10 @@ Framework.Route = new Class({
           pattern = '.*?';
         }
 
-        return '(' + pattern + ')(?:' + ( submatching ? '/' : '\\?' ) + '|$)';
+        return '(' + pattern + ')';
       }.bind( this ));
 
-      regex = new RegExp( regex );
+      regex = new RegExp( regex + '$' );
 
       if ( matches = url.replace( this.config.base_url, '/' ).match( regex ) ){
         matches.shift();
@@ -102,9 +102,11 @@ Framework.Route = new Class({
           });
         }
 
+
         match_container.each( function( match ){
           params.set( match.name, match.value );
         });
+
 
         if ( this.config.append_to ){
           this.config.append_to.each( function( route_name ){
