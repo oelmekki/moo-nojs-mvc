@@ -355,7 +355,8 @@ this.Model = new Class({
 
     this.before_destroy();
 
-    callback_success = callback_failure || this.default_callback_success.bind( this );
+    callback_success = callback_success || this.default_callback_success.bind( this );
+    callback_failure = callback_failure || this.default_callback_failure.bind( this );
 
     if ( ! this.is_new_record ){
       request = new this.options.Request({
@@ -419,7 +420,7 @@ this.Model = new Class({
 
 
   compute_update_url: function( params ){
-    return this.options.base_url + this.options.update.path + params.get( 'id' );
+    return this.options.base_url + this.options.update.path + '/' + params.get( 'id' );
   },
 
 
@@ -429,7 +430,7 @@ this.Model = new Class({
 
 
   compute_destroy_url: function(){
-    return this.options.base_url + this.options.destroy.path + this.get( 'id' );
+    return this.options.base_url + this.options.destroy.path + '/' + this.get( 'id' );
   },
 
 
