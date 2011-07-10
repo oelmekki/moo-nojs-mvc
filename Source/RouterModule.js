@@ -97,10 +97,14 @@ Framework.RouterModule = new Class({
 
     if ( ! match_found ){
       match_found = this.getDefaultRoute();
-      params = match_found.default_params;
+
+      if ( match_found ){
+        params = match_found.default_params;
+      }
     }
 
     if ( match_found ){
+
       if ( callback ){
         callback( params, match_found );
       }
