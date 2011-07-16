@@ -21,12 +21,17 @@ this.Controller = new Class({
     View: this.View,
     events: {},
     before_filters: [],
-    dependencies: {}
+    dependencies: {},
+    debug: false
   },
 
 
   initialize: function( $element, options, location ){
     if ( ! $element ){
+      if ( this.options.debug ){
+        throw new Error( 'Controller initialized without element' );
+      }
+
       return false;
     }
 
@@ -101,7 +106,7 @@ this.Controller = new Class({
 
 
   bindEvent: function( e ){
-    var callback_name, wrapper_func, view;
+    var callback_name, wrapper_func, view, debug;
 
     if ( ! this.view.get( e.el ) ){
       throw new Error( 'Controller : selector "' + e.el + '" do not return any element.' );
@@ -109,6 +114,7 @@ this.Controller = new Class({
 
     callback_name = this._getCallbackName( e );
     view = this.view;
+    debug = this.options.debug;
 
     if ( e.delegate ){
       wrapper_func = function( event, callback ){
@@ -153,15 +159,19 @@ this.Controller = new Class({
           sel = view.options.selectors[ e.el ];
 
           if ( ! sel ){
-            throw new Error( 'You asked controller to ensure element on "' + e.el + '" ' + e.type + ' events, but it\'s appear there is no "' + e.el + '" selector. ensure_element (set as default) do not work for now with dynamic getters. Please either set "ensure_element: false" in your event definition, or use a static event in your view.' );
+            if ( debug ){
+              throw new Error( 'You asked controller to ensure element on "' + e.el + '" ' + e.type + ' events, but it\'s appear there is no "' + e.el + '" selector. ensure_element (set as default) do not work for now with dynamic getters. Please either set "ensure_element: false" in your event definition, or use a static event in your view.' );
+            }
           }
 
-          if ( typeof sel != 'string' ){
-            sel = sel.sel;
-          }
+          else {
+            if ( typeof sel != 'string' ){
+              sel = sel.sel;
+            }
 
-          if ( $target.getParent( sel ) ){
-            $target = $target.getParent( sel );
+            if ( $target.getParent( sel ) ){
+              $target = $target.getParent( sel );
+            }
           }
         }
 
