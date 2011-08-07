@@ -22,7 +22,8 @@ this.Controller = new Class({
     events: {},
     before_filters: [],
     dependencies: {},
-    debug: false
+    debug: false,
+    stopOnError: true
   },
 
 
@@ -106,7 +107,7 @@ this.Controller = new Class({
 
 
   bindEvent: function( e ){
-    var callback_name, wrapper_func, view, debug;
+    var callback_name, wrapper_func, view, debug, stopOnError;
 
     if ( ! this.view.get( e.el ) ){
       throw new Error( 'Controller : selector "' + e.el + '" do not return any element.' );
@@ -115,9 +116,18 @@ this.Controller = new Class({
     callback_name = this._getCallbackName( e );
     view = this.view;
     debug = this.options.debug;
+    stopOnError = this.options.stopOnError;
 
     if ( e.delegate ){
       wrapper_func = function( event, callback ){
+
+        if ( window.crashed && stopOnError ){
+          if ( this.errorCallback ){
+            this.errorCallback();
+          }
+
+          return true;
+        }
 
         var sel, $target = $( event.target );
 
@@ -147,6 +157,14 @@ this.Controller = new Class({
 
     else {
       wrapper_func = function( event, callback ){
+        if ( window.crashed && stopOnError ){
+          if ( this.errorCallback ){
+            this.errorCallback();
+          }
+
+          return true;
+        }
+
         if ( e.stop === true || ( e.type == 'click' && e.stop !== false ) ){
           event.stop();
         }
@@ -225,3 +243,6 @@ this.Controller = new Class({
 });
 }).apply(Framework);
 
+window.addEvent( 'error', function(){
+  window.crashed = true;
+});
