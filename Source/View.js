@@ -47,6 +47,10 @@ this.View = new Class({
   get: function( key ){
     var $el, selector, cache = true, multiple, within;
 
+    if ( key == 'body' ){
+      return document.getElement( 'body' );
+    }
+
     if ( this.hasOwnProperty( '$' + key ) ){
       return this[ '$' + key ];
     }
