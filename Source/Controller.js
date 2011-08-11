@@ -238,7 +238,7 @@ this.Controller = new Class({
       return e.view_method;
     }
 
-    return e.el + e.type.capitalize() + ( e.type.match( /e$/ ) ? 'd' : 'ed' );
+    return ( e.delegate ? e.delegate : e.el ) + e.type.capitalize() + ( e.type.match( /e$/ ) ? 'd' : 'ed' );
   }
 });
 }).apply(Framework);
