@@ -22,6 +22,8 @@ this.Model = new Class({
   options: {
     Request: Request.JSON,
     base_url: '/',
+    format_extension: '',
+
     find: {
       path: '',
       method: 'get'
@@ -153,7 +155,7 @@ this.Model = new Class({
 
 
     compute_find_url: function( params ){
-      return this.prototype.options.base_url + this.prototype.options.find.path + params.get( 'id' );
+      return this.prototype.options.base_url + this.prototype.options.find.path.replace( ':id', params.get( 'id' ) ) + this.options.prototype.format_extension;
     },
 
 
@@ -173,7 +175,7 @@ this.Model = new Class({
 
 
     compute_find_all_url: function( params ){
-      return this.prototype.options.base_url + this.prototype.options.find_all.path;
+      return this.prototype.options.base_url + this.prototype.options.find_all.path + this.prototype.options.format_extension;
     },
 
 
@@ -202,7 +204,7 @@ this.Model = new Class({
 
 
     compute_create_url: function( params ){
-      return this.prototype.options.base_url + this.prototype.options.create.path;
+      return this.prototype.options.base_url + this.prototype.options.create.path + this.options.prototype.format_extension;
     },
 
 
@@ -410,7 +412,7 @@ this.Model = new Class({
 
 
   compute_create_url: function( params ){
-    return this.options.base_url + this.options.create.path;
+    return this.options.base_url + this.options.create.path + this.options.format_extension;
   },
 
 
@@ -420,7 +422,7 @@ this.Model = new Class({
 
 
   compute_update_url: function( params ){
-    return this.options.base_url + this.options.update.path + '/' + params.get( 'id' );
+    return this.options.base_url + this.options.update.path.replace( ':id',  params.get( 'id' ) ) + this.options.format_extension;
   },
 
 
@@ -430,7 +432,7 @@ this.Model = new Class({
 
 
   compute_destroy_url: function(){
-    return this.options.base_url + this.options.destroy.path + '/' + this.get( 'id' );
+    return this.options.base_url + this.options.destroy.path.replace( ':id', this.get( 'id' ) ) + this.options.format_extension;
   },
 
 
