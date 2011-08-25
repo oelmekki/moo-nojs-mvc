@@ -21,7 +21,7 @@ Class.Mutators.ClassMethods = function( methods ){
 Class.Mutators.Extends = function( parent ){
    this.parent = parent;
    parent.$prototyping = true;
-   this.prototype = new parent;
+   this.prototype = new parent();
    delete parent.$prototyping;
    this.extend( parent.__classMethods );
 };

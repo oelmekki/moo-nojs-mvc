@@ -10,12 +10,10 @@ Framework.RouterModule = new Class({
 
     if ( ! this.options.base_path ){
       throw new Error( 'You must specify a base_path options.' );
-      return false;
     }
 
     if ( ! this.options.routes ){
       throw new Error( 'You have implemented a Router, but there is no routes options in your class' );
-      return false;
     }
 
     if ( ! this.options.nopushstate_routing && ! window.history.pushState ){
@@ -27,7 +25,7 @@ Framework.RouterModule = new Class({
     this.initial_url = this.location.href;
 
     Framework.Route.routes = new Hash({});
-    new Hash( this.options.routes ).each( function( params, name ){
+    ( new Hash( this.options.routes ) ).each( function( params, name ){
       this.options.routes[ name ].base_url = params.base_url = this.base_url;
       Framework.Route.routes.set( name, new Framework.Route( params, name ) );
     }.bind( this ));
