@@ -6,7 +6,7 @@ Framework.RouterModule = new Class({
 //   }
 // }
   initRoutes: function(){
-    var first_pop = true;
+    var first_pop = ! Browser.firefox; // firefox doesn't fire popstate on first load
 
     if ( ! this.options.base_path ){
       throw new Error( 'You must specify a base_path options.' );
