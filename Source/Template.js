@@ -54,7 +54,7 @@ this.Template = new Class({
     _request_cache: {},
 
     request: function( name, url, callback ){
-      var request;
+      var request, match;
 
       if ( typeOf( url ) == 'function' ){
         callback = url;
@@ -78,10 +78,18 @@ this.Template = new Class({
             
             template_string.replace( /<script type="text\/mustache" id=".*?"( data-partial)?>([\s\S\w\W]*?)<\/script>/, function( match, partial, content ){
               template_string = content;
-              is_partial = !! partial;
+              is_partial      = !! partial;
             });
 
+
+            // lookup for partials
+            var match = template_string.match( /\{\{>\s*(\w+)\s+\}\}/ );
+            if ( match && ! this._partial_cache[ match[1] ] ){
+              throw new Error( 'Template ' + name + ' needs partial ' + match[1] + ' but that one is not loaded yet. Please load it.' );
+            }
+
             template = new Framework.Template( template_string );
+
             this[ is_partial ? '_partial_cache' : '_template_cache' ][ name ] = template;
             callback( template );
           }.bind( this ));
@@ -111,8 +119,8 @@ this.Template = new Class({
         request.addEvent( 'success', function( template_string, xml ){
           var templates = [];
           
-          template_string = template_string.replace( /<script type="text\/mustache" id="(.*?)"( data-partial)?>([\s\S\w\W]*?)<\/script>/g, function( match, name, partial, template ){
-            template = new Framework.Template( template );
+          template_string = template_string.replace( /<script type="text\/mustache" id="(.*?)_template"( data-partial)?>([\s\S\w\W]*?)<\/script>/g, function( match, name, partial, template_string ){
+            var template = new Framework.Template( template_string );
             templates.push({ name: name, template: template });
             this[ !! partial ? '_partial_cache' : '_template_cache' ][ name ] = template;
           }.bind( this ));
@@ -127,7 +135,7 @@ this.Template = new Class({
 
 
     getFromPage: function( name, callback ){
-      var template = document.getElement( 'script[type="text/mustache"]#' + name );
+      var template = document.getElement( 'script[type="text/mustache"]#' + name + '_template' );
       if ( template ){
         template = new Framework.Template( template.innerHTML );
         this._template_cache[ name ] = template;
@@ -143,18 +151,29 @@ this.Template = new Class({
   },
 
 
-  initialize: function( template ){
-    this.template = template;
+  initialize: function( template_string ){
+    this.template_string = template_string;
   },
 
 
   render: function( data ){
-    return this.options.Mustache.to_html( this.template, data );
+    return this.options.Mustache.to_html( this.template_string, data, this._rawPartials() );
   },
 
 
   toElement: function( data ){
     return Elements.from( this.render( data ) )[0];
+  },
+
+
+  _rawPartials: function(){
+    var partials = {};
+
+    Object.each( Framework.Template._partial_cache, function( template, name ){
+      partials[ name ] = template.template_string;
+    });
+
+    return partials;
   }
 });
 }).apply( Framework );

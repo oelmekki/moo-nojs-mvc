@@ -155,7 +155,7 @@ this.Model = new Class({
 
 
     compute_find_url: function( params ){
-      return this.prototype.options.base_url + this.prototype.options.find.path.replace( ':id', params.get( 'id' ) ) + this.options.prototype.format_extension;
+      return this.prototype.options.base_url + this.prototype.options.find.path.replace( ':id', params.get( 'id' ) ) + this.prototype.options.format_extension;
     },
 
 
@@ -274,6 +274,11 @@ this.Model = new Class({
         throw new Error( attributes + ' is neither a string nor an array' );
 
     }
+  },
+
+
+  getAttributes: function(){
+    return this._attributes.getClean();
   },
 
 

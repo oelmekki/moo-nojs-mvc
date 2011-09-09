@@ -52,7 +52,7 @@ Framework.Route = new Class({
         }
 
         if ( params[ match ] ){
-          if ( params[ match ].match( this.config[ match ] ) ){
+          if ( ( params[ match ] + '' ).match( this.config[ match ] ) ){
             return params[ match ];
           }
 
