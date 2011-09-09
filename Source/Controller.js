@@ -15,15 +15,15 @@ provides: [Framework.Controller]
 ...
 */
 this.Controller = new Class({
-  Implements: [ Options ],
+  Implements: [ Options, Events ],
 
   options: {
-    View: this.View,
-    events: {},
-    before_filters: [],
-    dependencies: {},
-    debug: false,
-    stopOnError: true
+    View:             this.View,
+    events:           {},
+    before_filters:   [],
+    dependencies:     {},
+    debug:            false,
+    stopOnError:      true
   },
 
 
@@ -56,6 +56,8 @@ this.Controller = new Class({
         run = false;
       }
     }.bind( this ));
+
+    this._events = {};
 
     if ( run ){
       if ( this.view.options && this.view.options.async_run ){
@@ -107,19 +109,24 @@ this.Controller = new Class({
 
 
   bindEvent: function( e ){
-    var callback_name, wrapper_func, view, debug, stopOnError;
+    var callback_name, wrapper_func, view, debug, stopOnError, final_func;
 
     if ( ! this.view.get( e.el ) ){
       throw new Error( 'Controller : selector "' + e.el + '" do not return any element.' );
     }
 
+    if ( ! e.type ){
+      throw new Error( 'Controller : no event type specified for ' + ( e.delegate || e.el ) + '.' );
+    }
+
     callback_name = this._getCallbackName( e );
-    view = this.view;
-    debug = this.options.debug;
-    stopOnError = this.options.stopOnError;
+    view          = this.view;
+    debug         = this.options.debug;
+    stopOnError   = this.options.stopOnError;
 
     if ( e.delegate ){
       wrapper_func = function( event, callback ){
+        var sel, $target;
 
         if ( window.crashed && stopOnError ){
           if ( this.errorCallback ){
@@ -129,9 +136,8 @@ this.Controller = new Class({
           return true;
         }
 
-        var sel, $target = $( event.target );
-
-        sel = view.options.selectors[ e.delegate ];
+        $target = $( event.target );
+        sel     = view.options.selectors[ e.delegate ];
 
         if ( ! sel ){
           throw new Error( 'You asked controller to delegate "' + e.el + '" ' + e.type + ' events on "' + e.delegate + '" elements. What about having some "' + e.delegate + '" definition in your view?' );
@@ -157,6 +163,8 @@ this.Controller = new Class({
 
     else {
       wrapper_func = function( event, callback ){
+        var sel, $target;
+
         if ( window.crashed && stopOnError ){
           if ( this.errorCallback ){
             this.errorCallback();
@@ -169,11 +177,9 @@ this.Controller = new Class({
           event.stop();
         }
 
-        var $target = $( event.target );
+        $target = $( event.target );
 
         if ( e.ensure_element !== false ){
-          var sel;
-
           sel = view.options.selectors[ e.el ];
 
           if ( ! sel ){
@@ -209,22 +215,35 @@ this.Controller = new Class({
       }.bind( this );
     }
 
+
+    // ensure event cache key existence
+
+    if ( ! this._events[ e.type ] ){
+      this._events[ e.type ] = [];
+    }
+
     // handles cancel delay
     if ( e.cancel_delay && e.cancel_delay > 0 ){
-      this.view.get( e.el ).addEvent( e.type, function( event ){
+      final_func = function( event ){
         window.clearTimeout( this[ callback_name + '_timeout' ] );
 
         this[ callback_name + '_timeout' ] = window.setTimeout( function(){
           wrapper_func( event, this[ callback_name ].bind( this ) );
         }.bind( this ), e.cancel_delay );
-      }.bind( this ));
+      }.bind( this );
+
+      this._events[ e.type ].push({ $element: this.view.get( e.el ), func: final_func });
+      this.view.get( e.el ).addEvent( e.type, final_func );
     }
 
     // direct execution
     else {
-      this.view.get( e.el ).addEvent( e.type, function( event ){
+      final_func = function( event ){
         wrapper_func( event, this[ callback_name ].bind( this ) );
-      }.bind( this ));
+      }.bind( this );
+
+      this._events[ e.type ].push({ $element: this.view.get( e.el ), func: final_func });
+      this.view.get( e.el ).addEvent( e.type, final_func );
     }
   },
 
@@ -239,6 +258,15 @@ this.Controller = new Class({
     }
 
     return ( e.delegate ? e.delegate : e.el ) + e.type.capitalize() + ( e.type.match( /e$/ ) ? 'd' : 'ed' );
+  },
+
+
+  unregister: function(){
+    Object.each( this._events, function( events, event_type ){
+      events.each( function( event ){
+        event.$element.removeEvent( event_type, event.func );
+      });
+    });
   }
 });
 }).apply(Framework);
