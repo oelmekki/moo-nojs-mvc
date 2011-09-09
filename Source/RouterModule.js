@@ -16,13 +16,15 @@ Framework.RouterModule = new Class({
       throw new Error( 'You have implemented a Router, but there is no routes options in your class' );
     }
 
-    if ( ! this.options.nopushstate_routing && ! window.history.pushState ){
+    if ( ! this.options.nopushstate_routing && ( ! window.history || ! window.history.pushState ) ){
       this.options.nopushstate_routing = true;
     }
 
-    this.base_domain = this.location.href.replace( /(https?:\/\/.*?\/).*/, '$1' );
-    this.base_url = ( this.base_domain + this.options.base_path + '/' );
-    this.initial_url = this.location.href;
+    this.base_domain  = this.location.href.replace( /(https?:\/\/.*?\/).*/, '$1' );
+    this.base_url     = ( this.base_domain + this.options.base_path + '/' );
+    this.initial_url  = this.location.href;
+    this.current_url  = this.initial_url;
+    this.previous_url = '';
 
     Framework.Route.routes = new Hash({});
     ( new Hash( this.options.routes ) ).each( function( params, name ){
@@ -49,7 +51,16 @@ Framework.RouterModule = new Class({
         }
 
         else {
-          this.parseRoute();
+          if ( window.crashed ){
+            window.location.reload();
+          }
+
+          else {
+            this.previous_url = this.current_url;
+            this.current_url  = this.location.href;
+
+            this.parseRoute();
+          }
         }
       }.bind( this );
     }
@@ -82,8 +93,13 @@ Framework.RouterModule = new Class({
   /**
    * Parse current url and set params
    */
-  parseRoute: function( callback ){
-    var params, match_found;
+  parseRoute: function( options ){
+    var params, match_found, callback;
+
+    options               = options || {};
+    callback              = options.callback;
+    options.current_url   = this.current_url;
+    options.previous_url  = this.previous_url;
 
     Framework.Route.routes.each( function( route, name ){
       if ( ! match_found ){
@@ -104,25 +120,27 @@ Framework.RouterModule = new Class({
     if ( match_found ){
 
       if ( callback ){
-        callback( params, match_found );
+        callback( params, match_found, options );
       }
 
       else {
-        this[ 'action' + match_found.name.capitalize() ]( params, match_found );
+        this[ 'action' + match_found.name.capitalize() ]( params, match_found, options );
       }
     }
   },
 
 
   changeRoute: function( route_name, params ){
-    var url;
+    var url, options;
 
     // change route from an element event
     if ( typeOf( route_name ) == 'element' ){
       params = new Hash();
-      route_name.get( 'data-params' ).replace( /(.*?)=([^,]+),?/g, function( match, key, value ){
-        params.set( key, value );
-      });
+      if ( route_name.get( 'data-params' ) ){
+        route_name.get( 'data-params' ).replace( /(.*?)=([^,]+),?/g, function( match, key, value ){
+          params.set( key, value );
+        });
+      }
 
       route_name = route_name.get( 'data-route' );
     }
@@ -132,19 +150,24 @@ Framework.RouterModule = new Class({
     }
 
 
-    url = Framework.Route.routes.get( route_name ).toUrl( params );
-
+    url               = Framework.Route.routes.get( route_name ).toUrl( params );
+    this.previous_url = this.current_url;
+    this.current_url  = this.base_url + ( this.options.nopushstate_routing ? '#!/' : '' ) + url;
+    options           = { 
+      previous_url: this.previous_url,
+      current_url:  this.current_url
+    };
 
     if ( this.options.nopushstate_routing ){
-      this.location.href = this.base_url + '#!/' + url;
+      this.location.href  = this.current_url;
     }
 
     else {
-      window.history.pushState( params, '', this.base_url + url );
+      window.history.pushState( params, '', this.current_url );
     }
 
 
-    this[ 'action' + route_name.capitalize() ]( params, Framework.Route.routes.get( route_name ) );
+    this[ 'action' + route_name.capitalize() ]( params, Framework.Route.routes.get( route_name ), options );
   },
 
 
